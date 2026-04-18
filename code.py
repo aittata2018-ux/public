@@ -77,7 +77,32 @@ if choice == "📅 محول التاريخ الهجري":
     month_name_fr = months_fr.get(hijri.month_name(), hijri.month_name())
 
     # عرض البطاقة بشكل متسع
+       # عرض البطاقة بشكل متسع
     st.markdown(f"""
+    <div style="background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid rgba(79, 172, 254, 0.3); margin: 20px 0;">
+        <h2 style='color: #4facfe; margin-bottom: 20px; font-size: 2rem;'>التاريخ الهجري | Date Hijri</h2>
+        <div style='display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;'>
+            <div style='margin: 20px;'>
+                <p style='font-size: 35px; font-weight: bold; color: #ffffff; margin: 0;'>
+                    {hijri.day} {hijri.month_name()} {hijri.year} هـ
+                </p>
+                <p style='font-size: 18px; color: #4facfe;'>باللغة العربية</p>
+            </div>
+            <div style='width: 2px; height: 80px; background: rgba(255,255,255,0.1);'></div>
+            <div style='margin: 20px;'>
+                <p style='font-size: 35px; font-weight: bold; color: #ffffff; margin: 0;'>
+                    {hijri.day} {month_name_fr} {hijri.year} AH
+                </p>
+                <p style='font-size: 18px; color: #4facfe;'>En Français</p>
+            </div>
+        </div>
+        <hr style='border: 0.5px solid rgba(255,255,255,0.1); width: 80%; margin: 30px auto;'>
+        <p style='font-size: 20px; opacity: 0.9;'>
+            الموافق لـ | Correspond au : <b>{d.day} {d.strftime('%B')} {d.year}</b>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     <div class="hijri-card">
         <h2 style='color: #4facfe; margin-bottom: 20px; font-size: 2rem;'>التاريخ الهجري | Date Hijri</h2>
         
