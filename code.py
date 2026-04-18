@@ -1,154 +1,92 @@
 import streamlit as st
 import pandas as pd
+import yfinance as yf
 from datetime import date
 
-# 1. إعدادات الصفحة - الواجهة الواسعة لمحاكاة الورقة الرسمية
-st.set_page_config(page_title="نظام كشوفات الأجور - إمجدال", page_icon="📝", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="Assistant Digital Pro", page_icon="🤖", layout="wide")
 
-# تنسيق CSS دقيق لمحاكاة نموذج الـ PDF الجديد
+# تنسيق الألوان الفاتحة (Light Theme)
 st.markdown("""
     <style>
-    .stApp { background-color: white; color: black; }
-    .report-header { text-align: left; font-family: 'Times New Roman', serif; font-weight: bold; font-size: 15px; line-height: 1.2; }
-    .report-title { text-align: center; border: 1px solid black; padding: 5px; margin: 10px auto; width: 40%; font-weight: bold; font-size: 18px; }
-    .table-container { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .table-container th { background-color: #dbeafe; border: 1px solid black; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; }
-    .table-container td { border: 1px solid black; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; height: 30px; }
-    .yellow-box { background-color: #eab308; border: 1px solid black; padding: 5px 20px; font-weight: bold; text-align: center; display: inline-block; font-size: 18px; color: black; }
-    .footer-section { display: flex; justify-content: space-between; margin-top: 50px; font-weight: bold; }
+    .stApp { background-color: #f8fafc; color: #1e293b; }
+    .card { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    h1, h2 { color: #0f172a; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-# القائمة الجانبية للتحكم في المعطيات (المعلومات المتحكم فيها)
+st.markdown("<h1>🤖 Assistant Digital - Version Tableaux</h1>", unsafe_allow_html=True)
+st.write("---")
+
+# القائمة الجانبية
 with st.sidebar:
-    st.header("⚙️ إعدادات النموذج")
-    choice = st.radio("اختر الأداة:", ["📄 محاكي الكشف الرسمي", "🔢 الحاسبة الذكية"])
+    st.header("⚙️ Menu")
+    choice = st.radio("Sélectionnez un outil :", 
+        ["💱 Tableau des Devises", "🕌 Horaires de Prière", "⚖️ Guide Santé (BMI)", "🔢 Calculatrice"])
+
+# --- 1. جدول العملات (Devises) ---
+if choice == "💱 Tableau des Devises":
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📊 Comparaison des Devises Arabes (vs 1 USD)")
     
-    if choice == "📄 محاكي الكشف الرسمي":
-        st.divider()
-        st.subheader("✍️ تعديل البيانات الإدارية")
-        commune = st.text_input("Commune", "IMGDAL")
-        periode = st.text_input("Période", "01/01/2026 au: 31/03/2026")
-        prix_h = st.number_input("Prix Heures (سعر الساعة)", value=17.92)
-        
-        st.divider()
-        st.subheader("👤 إدارة الموظفين")
-        if 'agents' not in st.session_state:
-            st.session_state.agents = [{"nom": "", "cin": "", "heures": 0, "jours": 0}]
+    @st.cache_data(ttl=3600)
+    def get_all_rates():
+        symbols = {"Maroc (MAD)": "USDMAD=X", "Égypte (EGP)": "USDEGP=X", "Arabie (SAR)": "USDSAR=X", "Émirats (AED)": "USDAED=X"}
+        data = []
+        for name, sym in symbols.items():
+            rate = yf.Ticker(sym).history(period="1d")['Close'].iloc[-1]
+            data.append({"Pays/Devise": name, "Taux de Change": round(rate, 2), "Symbole": sym.split('=')[0]})
+        return pd.DataFrame(data)
 
-        # إضافة سطر جديد للجدول
-        if st.button("➕ إضافة موظف جديد"):
-            st.session_state.agents.append({"nom": "", "cin": "", "heures": 0, "jours": 0})
-        
-        # مدخلات لكل موظف في القائمة الجانبية
-        for i, agent in enumerate(st.session_state.agents):
-            with st.expander(f"الموظف {i+1}"):
-                agent['nom'] = st.text_input(f"Prenom et Nom", value=agent['nom'], key=f"nom_{i}")
-                agent['cin'] = st.text_input(f"N° CIN", value=agent['cin'], key=f"cin_{i}")
-                agent['heures'] = st.number_input(f"Heures", value=agent['heures'], key=f"h_{i}")
-                agent['jours'] = st.number_input(f"Nombres de jour", value=agent['jours'], key=f"j_{i}")
-        
-        if st.button("🗑️ تفريغ الجدول"):
-            st.session_state.agents = [{"nom": "", "cin": "", "heures": 0, "jours": 0}]
-            st.rerun()
+    df_currencies = get_all_rates()
+    # عرض الجدول بشكل أنيق
+    st.table(df_currencies) 
+    st.info("💡 Les taux sont mis à jour automatiquement depuis la bourse.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 1. محاكاة كشف الأجور الرسمي ---
-if choice == "📄 محاكي الكشف الرسمي":
-    # الترويسة (Header) كما في الـ PDF
-    st.markdown(f"""
-    <div class="report-header">
-        ROYAUME DU MAROC<br>
-        MINISTERE DE L'INTERIEUR<br>
-        PROVINCE AL HAOUZ<br>
-        CERCLE ASNI<br>
-        CAIDAT OUIRGUANE<br>
-        *****<br>
-        COMMUNE {commune}
-    </div>
-    <div class="report-title">ÉTAT DE LA SOMME DUE</div>
-    <div style="font-weight: bold; margin-bottom: 20px; text-align: left; margin-left: 28%;">
-        1° partie,chap 10 ,art/prog 20/20,projet/action,10 Ling,14<br>
-        Salaires des Agent Occasionnels du Mois de : {periode}
-    </div>
-    """, unsafe_allow_html=True)
+# --- 2. جدول مواقيت الصلاة (Prière) ---
+elif choice == "🕌 Horaires de Prière":
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🕌 Horaires de Prière (Aujourd'hui)")
+    
+    # بيانات تجريبية منظمة في جدول (يمكن ربطها بـ API مستقبلاً)
+    prayer_data = {
+        "Prière": ["Fajr", "Chourouk", "Dhuhr", "Asr", "Maghrib", "Isha"],
+        "Heure": ["05:12", "06:45", "13:20", "16:55", "19:40", "21:00"]
+    }
+    df_prayer = pd.DataFrame(prayer_data)
+    st.table(df_prayer)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # حساب المجموع الكلي
-    total_val = sum(a['heures'] * prix_h * a['jours'] for a in st.session_state.agents)
+# --- 3. جدول دليل الصحة (BMI Guide) ---
+elif choice == "⚖️ Guide Santé (BMI)":
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("⚖️ Guide de l'Indice de Masse Corporelle (IMC)")
+    
+    bmi_guide = {
+        "Classification": ["Poids insuffisant", "Poids normal (Idéal)", "Surpoids", "Obésité"],
+        "Indice IMC": ["Moins de 18.5", "18.5 – 24.9", "25.0 – 29.9", "30.0 ou plus"],
+        "Conseil": ["Manger plus", "Maintenir", "Faire du sport", "Consulter un médecin"]
+    }
+    df_bmi = pd.DataFrame(bmi_guide)
+    st.table(df_bmi)
+    
+    st.write("---")
+    st.write("### Calculez le vôtre :")
+    w = st.number_input("Poids (kg)", value=70.0)
+    h = st.number_input("Taille (cm)", value=170.0) / 100
+    if st.button("Calculer mon IMC"):
+        res = round(w/(h*h), 1)
+        st.metric("Votre IMC", res)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # سطر "somme à payer à"
-    st.markdown(f"""
-    <div style="margin: 20px 0; font-weight: bold;">
-        <span>somme à payer à:</span>
-        <span style="margin-left: 50px;">{total_val:,.2f}</span>
-    </div>
-    """, unsafe_allow_html=True)
+# --- 4. الحاسبة (Calculatrice) ---
+elif choice == "🔢 Calculatrice":
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    n1 = st.number_input("Nombre 1", value=0.0)
+    n2 = st.number_input("Nombre 2", value=0.0)
+    if st.button("Calculer Somme"): st.success(f"Résultat: {n1 + n2}")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # بناء الجدول الرسمي
-    table_html = """
-    <table class="table-container">
-        <thead>
-            <tr>
-                <th>Prenom et Nom</th>
-                <th>N° CIN</th>
-                <th>Heures</th>
-                <th>Prix Heures</th>
-                <th>Salaire Journalier</th>
-                <th>Nombres de jour</th>
-                <th>PRODUIT</th>
-            </tr>
-        </thead>
-        <tbody>
-    """
-
-    for a in st.session_state.agents:
-        daily = round(a['heures'] * prix_h, 2)
-        prod = round(daily * a['jours'], 2)
-        table_html += f"""
-        <tr>
-            <td>{a['nom'].upper()}</td>
-            <td>{a['cin'].upper()}</td>
-            <td>{a['heures'] if a['heures'] > 0 else ''}</td>
-            <td>{prix_h if a['heures'] > 0 else ''}</td>
-            <td>{daily if a['heures'] > 0 else ''}</td>
-            <td>{a['jours'] if a['jours'] > 0 else ''}</td>
-            <td>{prod if prod > 0 else ''}</td>
-        </tr>
-        """
-
-    # سطر TOTAL النهائي
-    table_html += f"""
-        <tr>
-            <td colspan="6" style="text-align: center; font-weight: bold;">TOTAL</td>
-            <td class="yellow-box">{total_val:,.2f}</td>
-        </tr>
-        </tbody>
-    </table>
-    """
-
-    st.markdown(table_html, unsafe_allow_html=True)
-
-    # التذييل (Footer)
-    st.markdown(f"""
-    <div style="margin-top: 20px; font-weight: bold;">Relevant à la somme de:=</div>
-    <div class="footer-section">
-        <div>
-            certifié conforme aux attachements tenues<br><br><br>
-            L'ORDONNATEUR
-        </div>
-        <div style="text-align: right;">
-            A {commune} Le :{date.today().strftime('%d/%m/%Y')}<br><br><br>
-            le Régisseur de Dépense
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# --- 2. الحاسبة الذكية ---
-elif choice == "🔢 الحاسبة الذكية":
-    st.header("🔢 الحاسبة والنسبة المئوية")
-    n1 = st.number_input("الرقم الأول", value=0.0)
-    n2 = st.number_input("الرقم الثاني", value=0.0)
-    if st.button("احسب المجموع"):
-        st.success(f"النتيجة: {n1 + n2}")
-
-st.sidebar.divider()
-st.sidebar.info("💡 ملاحظة: يمكنك طباعة هذا الكشف بالضغط على Ctrl + P")
+st.divider()
+st.caption("📢 Assistant Digital Pro - Version Tableaux Intelligents")
