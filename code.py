@@ -3,16 +3,17 @@ import yfinance as yf
 from datetime import date
 from hijri_converter import Gregorian
 
-# 1. إعدادات الصفحة - الواجهة المفتوحة (Wide Layout)
+# 1. إعدادات الصفحة - الواجهة المفتوحة والواسعة
 st.set_page_config(page_title="مساعدك الرقمي الذكي", page_icon="🤖", layout="wide")
 
-# تنسيق CSS متطور للواجهة المفتوحة والألوان المتدرجة
+# تنسيق CSS متطور للواجهة المفتوحة والألوان المتدرجة مريحة للعين
 st.markdown("""
     <style>
+    /* توسيع المساحة الرئيسية */
     .block-container { padding-top: 2rem; max-width: 90%; }
     .stApp { background: linear-gradient(to bottom, #0f172a, #1e293b); color: white; }
     
-    /* تنسيق الأزرار */
+    /* تنسيق الأزرار الاحترافي */
     .stButton>button { 
         width: 100%; border-radius: 12px; 
         background: linear-gradient(45deg, #00f2fe, #4facfe); 
@@ -21,7 +22,7 @@ st.markdown("""
     }
     .stButton>button:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4); }
     
-    /* تصميم بطاقة التاريخ المتسعة */
+    /* تصميم بطاقة التاريخ المتسعة والمنفتحة */
     .hijri-card { 
         background: rgba(255, 255, 255, 0.05); 
         padding: 40px; border-radius: 20px; 
@@ -31,12 +32,12 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# العنوان الرئيسي
+# العنوان الرئيسي للمنصة
 st.markdown("<h1 style='text-align: center; font-size: 3rem;'>🤖 مساعدك الرقمي الذكي</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; opacity: 0.7;'>منصتك المتكاملة للأدوات اليومية والخدمات الذكية</p>", unsafe_allow_html=True)
 st.write("---")
 
-# القائمة الجانبية
+# القائمة الجانبية للتنقل
 with st.sidebar:
     st.image("https://flaticon.com", width=100)
     st.header("⚙️ لوحة التحكم")
@@ -51,10 +52,11 @@ if choice == "📅 محول التاريخ الهجري":
     with col_input:
         d = st.date_input("اختر التاريخ الميلادي:", date.today())
     
-    # عملية التحويل
+    # عملية التحويل باستخدام المكتبة
     hijri = Gregorian(d.year, d.month, d.day).to_hijri()
+    m_name_raw = hijri.month_name()
     
-    # قواميس لأسماء الشهور (عربي وفرنسي)
+    # قواميس لضمان تعريب أسماء الشهور (بدون ظهور None)
     months_ar = {
         "Muharram": "محرم", "Safar": "صفر", "Rabi' al-Awwal": "ربيع الأول",
         "Rabi' al-Thani": "ربيع الثاني", "Jumada al-Ula": "جمادى الأولى",
@@ -62,18 +64,11 @@ if choice == "📅 محول التاريخ الهجري":
         "Ramadan": "رمضان", "Shawwal": "شوال", "Dhu al-Qi'dah": "ذو القعدة",
         "Dhu al-Hijjah": "ذو الحجة"
     }
-    months_fr = {
-        "Muharram": "Muharram", "Safar": "Safar", "Rabi' al-Awwal": "Rabi' al-Awwal",
-        "Rabi' al-Thani": "Rabi' al-Thani", "Jumada al-Ula": "Jumada al-Ula",
-        "Jumada al-Akhira": "Jumada al-Akhira", "Rajab": "Rajab", "Sha'ban": "Sha'ban",
-        "Ramadan": "Ramadan", "Shawwal": "Shawwal", "Dhu al-Qi'dah": "Dhu al-Qi'dah",
-        "Dhu al-Hijjah": "Dhu al-Hijjah"
-    }
+    
+    m_ar = months_ar.get(m_name_raw, m_name_raw)
+    m_fr = m_name_raw
 
-    m_ar = months_ar.get(hijri.month_name())
-    m_fr = months_fr.get(hijri.month_name())
-
-    # عرض البطاقة بالتصميم المفتوح والمزدوج
+    # عرض البطاقة باستخدام st.markdown مع تفعيل unsafe_allow_html لظهار التصميم
     st.markdown(f"""
     <div class="hijri-card">
         <h2 style='color: #4facfe; margin-bottom: 30px; font-size: 2.2rem;'>التاريخ الهجري | Date Hijri</h2>
