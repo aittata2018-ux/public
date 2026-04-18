@@ -30,3 +30,8 @@ with col4:
 # عرض النتيجة
 if res is not None:
     st.success(f"النتيجة: {res}")
+    st.markdown("---")
+st.write("📢 **إعلان:** [ضع هنا رابط لمنتج أو خدمة تريد الترويج لها]")
+# يمكنك حتى وضع صورة إعلانية
+# st.image("link_to_your_ad_image.png")
+
