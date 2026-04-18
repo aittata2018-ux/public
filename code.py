@@ -1,123 +1,117 @@
 import streamlit as st
 import pandas as pd
-import yfinance as yf
-from datetime import date
-from hijri_converter import Gregorian
 
-# 1. إعدادات الصفحة - الواجهة الواسعة
-st.set_page_config(page_title="مساعدك الرقمي Pro", page_icon="🤖", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="Assistant Digital Pro", page_icon="🤖", layout="wide")
 
-# تنسيق CSS احترافي لمحاكاة شكل الجدول المرفق في الصورة
+# تنسيق CSS احترافي لضبط الجدول بدقة (Pixel Perfect)
 st.markdown("""
     <style>
     .stApp { background-color: #f8fafc; }
-    /* تنسيق جدول الرواتب المخصص */
-    .salary-table {
+    
+    /* تنسيق الجدول الرئيسي */
+    .custom-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px 0;
-        font-family: Arial, sans-serif;
+        margin-top: 20px;
+        background-color: white;
     }
-    .salary-table th {
-        background-color: #e8eefc; /* لون أزرق باهت مثل الصورة */
-        color: #000;
+    .custom-table th {
+        background-color: #e8eefc;
+        color: #1e3a8a;
         border: 1px solid #000;
-        padding: 10px;
+        padding: 12px;
         text-align: center;
+        font-weight: bold;
         font-style: italic;
     }
-    .salary-table td {
+    .custom-table td {
+        border: 1px solid #000;
+        padding: 12px;
+        text-align: center;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* تنسيق قسم المجموع (TOTAL) أسفل الجدول */
+    .total-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: -1px; /* للالتصاق بالجدول */
+    }
+    .total-label {
+        width: 200px;
         border: 1px solid #000;
         padding: 10px;
         text-align: center;
         font-weight: bold;
-    }
-    .total-label {
-        text-align: center;
-        font-weight: bold;
-        font-size: 18px;
+        background-color: white;
     }
     .total-value {
-        background-color: #fef08a; /* اللون الأصفر المميز للمجموع */
-        border: 2px solid #000;
+        width: 200px;
+        background-color: #fef08a; /* الأصفر المختار */
+        border: 1px solid #000;
+        border-left: none;
         padding: 10px;
         text-align: center;
         font-weight: bold;
-        font-size: 20px;
+        font-size: 1.2rem;
+        color: #000;
     }
+    
+    /* تحسين شكل خانات الإدخال */
+    .stNumberInput { margin-bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-# العنوان الرئيسي
 st.markdown("<h1 style='text-align: center; color: #1e3a8a;'>🤖 Assistant Digital Pro</h1>", unsafe_allow_html=True)
-st.write("---")
+st.markdown("<h3 style='text-align: left;'>📊 Calcul de Salaire Professionnel</h3>", unsafe_allow_html=True)
 
-# القائمة الجانبية (Sidebar)
-with st.sidebar:
-    st.header("⚙️ Menu des Outils")
-    choice = st.radio("Sélectionnez l'outil :", 
-        ["📅 Calendrier Hijri", "💰 Gestion de Paie (Tableau)", "🔢 Calculatrice", "💱 Bourse Live"])
+# --- واجهة إدخال البيانات المنظمة ---
+col1, col2, col3 = st.columns(3)
+with col1:
+    h_price = st.number_input("Prix Heure (سعر الساعة)", value=17.92, step=0.01)
+with col2:
+    hours = st.number_input("Heures (ساعات العمل)", value=8)
+with col3:
+    days = st.number_input("Nombres de jour (عدد الأيام)", value=30)
 
-# --- 1. محول التاريخ الهجري ---
-if choice == "📅 Calendrier Hijri":
-    st.header("📅 Convertisseur Hijri")
-    d = st.date_input("Date Grégorienne :", date.today())
-    hijri = Gregorian(d.year, d.month, d.day).to_hijri()
-    st.info(f"Date : {hijri.day} {hijri.month_name()} {hijri.year} AH ({hijri.day_name()})")
+# الحسابات
+daily_salary = round(hours * h_price, 2)
+total_product = round(daily_salary * days, 2)
 
-# --- 2. إدارة الرواتب (الشكل المطلوب في الصورة) ---
-elif choice == "💰 Gestion de Paie (Tableau)":
-    st.header("📊 Calcul de Salaire Professionnel")
-    
-    # مدخلات البيانات
-    col1, col2, col3 = st.columns(3)
-    with col1: h_price = st.number_input("Prix Heure (سعر الساعة)", value=17.92)
-    with col2: hours = st.number_input("Heures (ساعات العمل)", value=8)
-    with col3: days = st.number_input("Nombres de jour (عدد الأيام)", value=30)
-    
-    # الحسابات
-    daily = round(hours * h_price, 2)
-    product = round(daily * days, 2)
-    
-    # بناء الجدول بنظام HTML ليطابق الصورة تماماً
-    st.markdown(f"""
-    <table class="salary-table">
-        <tr>
-            <th>Heures</th>
-            <th>Prix Heures</th>
-            <th>Salaire Journalier</th>
-            <th>Nombres de jour</th>
-            <th>PRODUIT</th>
-        </tr>
-        <tr>
-            <td>{hours}</td>
-            <td>{h_price}</td>
-            <td>{daily}</td>
-            <td>{days}</td>
-            <td>{product}</td>
-        </tr>
+# --- عرض الجدول المنسق بدقة ---
+st.markdown(f"""
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Heures</th>
+                <th>Prix Heures</th>
+                <th>Salaire Journalier</th>
+                <th>Nombres de jour</th>
+                <th>PRODUIT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{hours}</td>
+                <td>{h_price}</td>
+                <td>{daily_salary}</td>
+                <td>{days}</td>
+                <td>{total_product}</td>
+            </tr>
+        </tbody>
     </table>
-    
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 20px; margin-top: -21px;">
-        <div class="total-label" style="width: 20%; border: 1px solid #000; padding: 11px; border-top: none;">TOTAL</div>
-        <div class="total-value" style="width: 20%;">{product}</div>
+    <div class="total-container">
+        <div class="total-label">TOTAL</div>
+        <div class="total-value">{total_product:,.2f}</div>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.write("---")
-    st.caption("تنبيه: هذا الجدول مصمم ليطابق الشكل الذي طلبته في الصورة.")
 
-# --- 3. الحاسبة ---
-elif choice == "🔢 Calculatrice":
-    st.header("🔢 Calculatrice")
-    n1 = st.number_input("Nombre 1", value=0.0)
-    n2 = st.number_input("Nombre 2", value=0.0)
-    if st.button("Calculer"): st.success(f"Résultat : {n1 + n2}")
+st.write("---")
+st.caption("💡 تم ضبط التنسيق ليتطابق مع الشكل المطلوب في الصورة الأصلية.")
 
-# --- 4. البورصة ---
-elif choice == "💱 Bourse Live":
-    st.header("💱 Taux de Change")
-    st.info("Données en cours de chargement من البورصة العالمية...")
-
-st.divider()
-st.caption("🤖 Assistant Digital Pro - 2024")
+# القسم الإضافي للإعلانات أو التواصل
+st.sidebar.header("⚙️ الإعدادات")
+if st.sidebar.button("🗑️ إعادة تعيين"):
+    st.rerun()
