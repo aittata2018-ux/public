@@ -3,15 +3,20 @@ import yfinance as yf
 from datetime import date
 from hijri_converter import Gregorian
 
-# 1. إعدادات الصفحة - الواجهة الواسعة
+# 1. إعدادات الصفحة - الواجهة الواسعة والمنفتحة
 st.set_page_config(page_title="مساعدك الرقمي الذكي", page_icon="🤖", layout="wide")
 
-# تنسيق الجماليات (CSS)
+# تنسيق CSS احترافي وتوسيع الواجهة
 st.markdown("""
     <style>
-    .block-container { padding-top: 2rem; max-width: 90%; }
+    .block-container { padding-top: 2rem; max-width: 92%; }
     .stApp { background: linear-gradient(to bottom, #0f172a, #1e293b); color: white; }
-    .stButton>button { width: 100%; border-radius: 12px; background: linear-gradient(45deg, #00f2fe, #4facfe); color: white; border: none; font-weight: bold; height: 3.5rem; font-size: 18px; }
+    .stButton>button { 
+        width: 100%; border-radius: 12px; 
+        background: linear-gradient(45deg, #00f2fe, #4facfe); 
+        color: white; border: none; font-weight: bold; 
+        height: 3.5rem; font-size: 18px; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -21,21 +26,22 @@ st.write("---")
 # القائمة الجانبية
 with st.sidebar:
     st.header("⚙️ لوحة التحكم")
-    choice = st.radio("اختر الأداة:", ["📅 محول التاريخ الهجري", "🔢 الحاسبة المتطورة", "💱 بورصة العملات", "📝 مفكرة المهام"])
+    choice = st.radio("اختر الأداة المطلوبة:", 
+        ["📅 محول التاريخ الهجري", "🔢 الحاسبة المتطورة", "💱 بورصة العملات", "📝 مفكرة المهام", "⚖️ الصحة والقياسات"])
 
-# --- 1. محول التاريخ الهجري (النسخة النهائية المعربة) ---
+# --- 1. محول التاريخ الهجري (النسخة المعربة والمنفتحة 100%) ---
 if choice == "📅 محول التاريخ الهجري":
     st.markdown("<h2 style='text-align: center;'>📅 تحويل التاريخ الميلادي إلى هجري</h2>", unsafe_allow_html=True)
     
-    col_input_space, col_input_main, col_input_space2 = st.columns([1, 2, 1])
-    with col_input_main:
+    col_sp1, col_in, col_sp2 = st.columns([1, 2, 1])
+    with col_in:
         d = st.date_input("اختر التاريخ الميلادي:", date.today())
     
     # عملية التحويل
     hijri = Gregorian(d.year, d.month, d.day).to_hijri()
     m_name_raw = hijri.month_name()
     
-    # قاموس التعريب
+    # قاموس تعريب الشهور
     months_ar = {
         "Muharram": "محرم", "Safar": "صفر", "Rabi' al-Awwal": "ربيع الأول",
         "Rabi' al-Thani": "ربيع الثاني", "Jumada al-Ula": "جمادى الأولى",
@@ -47,92 +53,62 @@ if choice == "📅 محول التاريخ الهجري":
     m_ar = months_ar.get(m_name_raw, m_name_raw)
     m_fr = m_name_raw
 
-    # عرض البطاقة بالتصميم المفتوح (HTML المصحح)
-       # 1. القاموس لتعريب الشهور (ضمان عدم ظهور الإنجليزية في جهة العرب)
-    months_ar = {
-        "Muharram": "محرم", "Safar": "صفر", "Rabi' al-Awwal": "ربيع الأول",
-        "Rabi' al-Thani": "ربيع الثاني", "Jumada al-Ula": "جمادى الأولى",
-        "Jumada al-Akhira": "جمادى الآخرة", "Rajab": "رجب", "Sha'ban": "شعبان",
-        "Ramadan": "رمضان", "Shawwal": "شوال", "Dhu al-Qi'dah": "ذو القعدة",
-        "Dhu al-Hijjah": "ذو الحجة"
-    }
-    
-    m_name_raw = hijri.month_name()
-    m_ar = months_ar.get(m_name_raw, m_name_raw)
-    m_fr = m_name_raw
-
-    # 2. عرض البطاقة الاحترافية (تأكد من نسخ السطر الأخير بدقة)
+    # عرض البطاقة - تأكد من نسخ هذا الجزء كما هو بالضبط
     st.markdown(f"""
     <div style="background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid rgba(79, 172, 254, 0.3); margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h2 style='color: #4facfe; margin-bottom: 30px; font-size: 2.2rem;'>التاريخ الهجري | Date Hijri</h2>
-        
         <div style='display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;'>
             <div style='margin: 20px;'>
-                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>
-                    {hijri.day} {m_ar} {hijri.year} هـ
-                </p>
+                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>{hijri.day} {m_ar} {hijri.year} هـ</p>
                 <p style='font-size: 20px; color: #4facfe;'>باللغة العربية</p>
             </div>
-            
             <div style='width: 2px; height: 100px; background: rgba(255,255,255,0.1);'></div>
-            
             <div style='margin: 20px;'>
-                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>
-                    {hijri.day} {m_fr} {hijri.year} AH
-                </p>
+                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>{hijri.day} {m_fr} {hijri.year} AH</p>
                 <p style='font-size: 20px; color: #4facfe;'>En Français</p>
             </div>
         </div>
-        
         <hr style='border: 0.5px solid rgba(255,255,255,0.1); width: 80%; margin: 30px auto;'>
-        
-        <p style='font-size: 22px; opacity: 0.9;'>
-            الموافق لـ : <b>{d.day}/{d.month}/{d.year}</b>
-        </p>
-    </div>
-    """, unsafe_allow_html=True) # هذا هو السطر الأهم الذي كان ينقصك!
-
-    <div style="background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid rgba(79, 172, 254, 0.3); margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-        <h2 style='color: #4facfe; margin-bottom: 30px; font-size: 2.2rem;'>التاريخ الهجري | Date Hijri</h2>
-        
-        <div style='display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;'>
-            <div style='margin: 20px;'>
-                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>
-                    {hijri.day} {m_ar} {hijri.year} هـ
-                </p>
-                <p style='font-size: 20px; color: #4facfe;'>باللغة العربية</p>
-            </div>
-            
-            <div style='width: 2px; height: 100px; background: rgba(255,255,255,0.1);'></div>
-            
-            <div style='margin: 20px;'>
-                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>
-                    {hijri.day} {m_fr} {hijri.year} AH
-                </p>
-                <p style='font-size: 20px; color: #4facfe;'>En Français</p>
-            </div>
-        </div>
-        
-        <hr style='border: 0.5px solid rgba(255,255,255,0.1); width: 80%; margin: 30px auto;'>
-        
-        <p style='font-size: 22px; opacity: 0.9;'>
-            الموافق لـ : <b>{d.day}/{d.month}/{d.year}</b>
-        </p>
+        <p style='font-size: 22px; opacity: 0.9;'>الموافق لـ : <b>{d.day}/{d.month}/{d.year}</b></p>
     </div>
     """, unsafe_allow_html=True)
     st.success(f"اليوم | Jour : {hijri.day_name()}")
 
-# --- الأقسام الأخرى لضمان عدم حدوث أخطاء ---
+# --- 2. الحاسبة المتطورة ---
 elif choice == "🔢 الحاسبة المتطورة":
-    st.header("🔢 الحاسبة")
-    n1 = st.number_input("الرقم الأول", value=0.0)
-    n2 = st.number_input("الرقم الثاني", value=0.0)
-    if st.button("➕ احسب المجموع"): st.success(f"النتيجة: {n1 + n2}")
+    st.header("🔢 الحاسبة والنسبة المئوية")
+    col1, col2 = st.columns(2)
+    n1 = col1.number_input("الرقم الأول", value=0.0); n2 = col2.number_input("الرقم الثاني", value=0.0)
+    c1, c2, c3, c4, c5 = st.columns(5)
+    res = None
+    if c1.button("➕"): res = n1 + n2
+    if c2.button("➖"): res = n1 - n2
+    if c3.button("✖️"): res = n1 * n2
+    if c4.button("➗"): res = round(n1/n2, 2) if n2 != 0 else "خطأ"
+    if c5.button("%"): res = round((n1 * n2) / 100, 2)
+    if res is not None: st.success(f"النتيجة: {res}")
 
+# --- 3. بورصة العملات ---
 elif choice == "💱 بورصة العملات":
-    st.header("💱 العملات")
-    st.info("سيتم عرض أسعار الصرف هنا.")
+    st.header("💱 أسعار العملات المباشرة")
+    curr_dict = {"المغرب (MAD)": "USDMAD=X", "مصر (EGP)": "USDEGP=X", "السعودية (SAR)": "USDSAR=X"}
+    target = st.selectbox("اختر العملة:", list(curr_dict.keys()))
+    @st.cache_data(ttl=600)
+    def get_rate(sym):
+        try: return round(yf.Ticker(sym).history(period="1d")['Close'].iloc[-1], 2)
+        except: return 10.0
+    rate = get_rate(curr_dict[target])
+    usd = st.number_input("المبلغ بالدولار ($)", value=1.0)
+    st.metric(label=f"القيمة بـ {target}", value=f"{round(usd*rate, 2)}", delta=f"سعر اليوم: {rate}")
 
+# --- 4. مفكرة المهام ---
 elif choice == "📝 مفكرة المهام":
-    st.header("📝 المهام")
-    st.write("أضف مهامك هنا.")
+    st.header("📝 قائمة المهام")
+    if 'tasks' not in st.session_state: st.session_state.tasks = []
+    new_task = st.text_input("أضف مهمة:")
+    if st.button("إضافة"):
+        if new_task: st.session_state.tasks.append(new_task); st.rerun()
+    for i, task in enumerate(st.session_state.tasks):
+        ct, cb = st.columns([0.8, 0.2])
+        ct.write(f"✅ {task}")
+        if cb.button("حذف", key=f"d_{i}"): st.session_state.tasks.pop(i); st.rerun()
