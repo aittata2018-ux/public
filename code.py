@@ -1,92 +1,108 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
-from datetime import date
+from datetime import date, datetime
+import pytz
+import random
+import string
+from hijri_converter import Gregorian
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="Assistant Digital Pro", page_icon="🤖", layout="wide")
 
-# تنسيق الألوان الفاتحة (Light Theme)
+# تنسيق CSS احترافي (النسخة الفاتحة والمريحة)
 st.markdown("""
     <style>
     .stApp { background-color: #f8fafc; color: #1e293b; }
-    .card { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
-    h1, h2 { color: #0f172a; text-align: center; }
+    .block-container { padding-top: 2rem; max-width: 92%; }
+    .stButton>button { 
+        width: 100%; border-radius: 12px; 
+        background: linear-gradient(45deg, #3b82f6, #2563eb); 
+        color: white; border: none; font-weight: bold; height: 3.5rem; 
+    }
+    .card { 
+        background: white; padding: 30px; border-radius: 20px; 
+        border: 1px solid #e2e8f0; margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    h1, h2, h3 { color: #0f172a !important; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1>🤖 Assistant Digital - Version Tableaux</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🤖 Assistant Digital Intelligent Pro</h1>", unsafe_allow_html=True)
 st.write("---")
 
-# القائمة الجانبية
+# القائمة الجانبية المطورة
 with st.sidebar:
-    st.header("⚙️ Menu")
-    choice = st.radio("Sélectionnez un outil :", 
-        ["💱 Tableau des Devises", "🕌 Horaires de Prière", "⚖️ Guide Santé (BMI)", "🔢 Calculatrice"])
+    st.header("⚙️ Menu des Outils")
+    choice = st.radio("Sélectionnez une catégorie :", 
+        ["📅 Calendrier Hijri", "🔢 Calculatrice Pro", "💹 Bourse & Crypto", "⏰ Horloge Mondiale", "🔐 Sécurité", "📝 Tâches"])
 
-# --- 1. جدول العملات (Devises) ---
-if choice == "💱 Tableau des Devises":
+# --- 1. Calendrier Hijri ---
+if choice == "📅 Calendrier Hijri":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("📊 Comparaison des Devises Arabes (vs 1 USD)")
-    
-    @st.cache_data(ttl=3600)
-    def get_all_rates():
-        symbols = {"Maroc (MAD)": "USDMAD=X", "Égypte (EGP)": "USDEGP=X", "Arabie (SAR)": "USDSAR=X", "Émirats (AED)": "USDAED=X"}
-        data = []
-        for name, sym in symbols.items():
-            rate = yf.Ticker(sym).history(period="1d")['Close'].iloc[-1]
-            data.append({"Pays/Devise": name, "Taux de Change": round(rate, 2), "Symbole": sym.split('=')[0]})
-        return pd.DataFrame(data)
-
-    df_currencies = get_all_rates()
-    # عرض الجدول بشكل أنيق
-    st.table(df_currencies) 
-    st.info("💡 Les taux sont mis à jour automatiquement depuis la bourse.")
+    d = st.date_input("Choisir la date Grégorienne :", date.today())
+    hijri = Gregorian(d.year, d.month, d.day).to_hijri()
+    st.markdown(f"<h2>{hijri.day} {hijri.month_name()} {hijri.year} AH</h2>", unsafe_allow_html=True)
+    st.write(f"<p style='text-align:center;'>Jour : {hijri.day_name()}</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 2. جدول مواقيت الصلاة (Prière) ---
-elif choice == "🕌 Horaires de Prière":
+# --- 2. Calculatrice Pro ---
+elif choice == "🔢 Calculatrice Pro":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🕌 Horaires de Prière (Aujourd'hui)")
-    
-    # بيانات تجريبية منظمة في جدول (يمكن ربطها بـ API مستقبلاً)
-    prayer_data = {
-        "Prière": ["Fajr", "Chourouk", "Dhuhr", "Asr", "Maghrib", "Isha"],
-        "Heure": ["05:12", "06:45", "13:20", "16:55", "19:40", "21:00"]
-    }
-    df_prayer = pd.DataFrame(prayer_data)
-    st.table(df_prayer)
+    col1, col2 = st.columns(2)
+    n1 = col1.number_input("Nombre 1", value=0.0)
+    n2 = col2.number_input("Nombre 2", value=0.0)
+    c1, c2, c3, c4, c5 = st.columns(5)
+    res = None
+    if c1.button("➕"): res = n1 + n2
+    if c2.button("➖"): res = n1 - n2
+    if c3.button("✖️"): res = n1 * n2
+    if c4.button("➗"): res = round(n1/n2, 2) if n2 != 0 else "Erreur"
+    if c5.button("%"): res = round((n1 * n2) / 100, 2)
+    if res is not None: st.success(f"Résultat : {res}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 3. جدول دليل الصحة (BMI Guide) ---
-elif choice == "⚖️ Guide Santé (BMI)":
+# --- 3. Bourse & Crypto ---
+elif choice == "💹 Bourse & Crypto":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("⚖️ Guide de l'Indice de Masse Corporelle (IMC)")
-    
-    bmi_guide = {
-        "Classification": ["Poids insuffisant", "Poids normal (Idéal)", "Surpoids", "Obésité"],
-        "Indice IMC": ["Moins de 18.5", "18.5 – 24.9", "25.0 – 29.9", "30.0 ou plus"],
-        "Conseil": ["Manger plus", "Maintenir", "Faire du sport", "Consulter un médecin"]
-    }
-    df_bmi = pd.DataFrame(bmi_guide)
-    st.table(df_bmi)
-    
-    st.write("---")
-    st.write("### Calculez le vôtre :")
-    w = st.number_input("Poids (kg)", value=70.0)
-    h = st.number_input("Taille (cm)", value=170.0) / 100
-    if st.button("Calculer mon IMC"):
-        res = round(w/(h*h), 1)
-        st.metric("Votre IMC", res)
+    symbol = st.text_input("Entrez le symbole (ex: BTC-USD, AAPL, GC=F for Gold):", "BTC-USD").upper()
+    if st.button("Obtenir le prix"):
+        try:
+            data = yf.Ticker(symbol).history(period="1d")
+            price = round(data['Close'].iloc[-1], 2)
+            st.metric(label=f"Prix Actuel de {symbol}", value=f"{price} $")
+        except: st.error("Symbole non trouvé.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 4. الحاسبة (Calculatrice) ---
-elif choice == "🔢 Calculatrice":
+# --- 4. Horloge Mondiale ---
+elif choice == "⏰ Horloge Mondiale":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    n1 = st.number_input("Nombre 1", value=0.0)
-    n2 = st.number_input("Nombre 2", value=0.0)
-    if st.button("Calculer Somme"): st.success(f"Résultat: {n1 + n2}")
+    zones = {'Rabat/Paris': 'Africa/Casablanca', 'New York': 'America/New_York', 'London': 'Europe/London', 'Dubai': 'Asia/Dubai', 'Tokyo': 'Asia/Tokyo'}
+    for city, tz in zones.items():
+        now = datetime.now(pytz.timezone(tz)).strftime("%H:%M:%S")
+        st.write(f"**{city}** : {now}")
     st.markdown("</div>", unsafe_allow_html=True)
+
+# --- 5. Sécurité (Password Generator) ---
+elif choice == "🔐 Sécurité":
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    length = st.slider("Longueur du mot de passe :", 8, 32, 12)
+    if st.button("Générer un mot de passe fort"):
+        chars = string.ascii_letters + string.digits + string.punctuation
+        pwd = ''.join(random.choice(chars) for i in range(length))
+        st.code(pwd)
+        st.info("Copiez ce mot de passe et gardez-le en sécurité.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# --- 6. Tâches ---
+elif choice == "📝 Tâches":
+    st.header("📝 Liste de Tâches")
+    if 'tasks' not in st.session_state: st.session_state.tasks = []
+    t = st.text_input("Ajouter une tâche :")
+    if st.button("Ajouter"):
+        if t: st.session_state.tasks.append(t); st.rerun()
+    for i, task in enumerate(st.session_state.tasks):
+        st.markdown(f"<div style='background:white; padding:10px; border-radius:10px; margin-bottom:5px; border:1px solid #e2e8f0;'>✅ {task}</div>", unsafe_allow_html=True)
 
 st.divider()
-st.caption("📢 Assistant Digital Pro - Version Tableaux Intelligents")
+st.caption("📢 Assistant Digital Pro - Votre compagnon quotidien intelligent")
