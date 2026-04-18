@@ -1,143 +1,123 @@
 import streamlit as st
 import pandas as pd
+import yfinance as yf
 from datetime import date
+from hijri_converter import Gregorian
 
 # 1. إعدادات الصفحة - الواجهة الواسعة
-st.set_page_config(page_title="نظام الكشوفات الإدارية", page_icon="📝", layout="wide")
+st.set_page_config(page_title="مساعدك الرقمي Pro", page_icon="🤖", layout="wide")
 
-# تنسيق CSS لمحاكاة الوثيقة الرسمية الإدارية
+# تنسيق CSS احترافي لمحاكاة شكل الجدول المرفق في الصورة
 st.markdown("""
     <style>
-    .stApp { background-color: white; color: black; }
-    .report-header { text-align: left; font-family: Arial; font-weight: bold; font-size: 14px; line-height: 1.2; }
-    .report-title { text-align: center; border: 2px solid black; padding: 5px; margin: 20px auto; width: 40%; font-weight: bold; font-size: 18px; }
-    .table-container { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .table-container th { background-color: #e8eefc; border: 1px solid black; padding: 8px; text-align: center; font-style: italic; font-size: 13px; }
-    .table-container td { border: 1px solid black; padding: 8px; text-align: center; font-weight: bold; font-size: 13px; color: black; }
-    .yellow-box { background-color: #ffff00; border: 1px solid black; padding: 5px 15px; font-weight: bold; text-align: center; display: inline-block; }
+    .stApp { background-color: #f8fafc; }
+    /* تنسيق جدول الرواتب المخصص */
+    .salary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-family: Arial, sans-serif;
+    }
+    .salary-table th {
+        background-color: #e8eefc; /* لون أزرق باهت مثل الصورة */
+        color: #000;
+        border: 1px solid #000;
+        padding: 10px;
+        text-align: center;
+        font-style: italic;
+    }
+    .salary-table td {
+        border: 1px solid #000;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .total-label {
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+    }
+    .total-value {
+        background-color: #fef08a; /* اللون الأصفر المميز للمجموع */
+        border: 2px solid #000;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 20px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- القائمة الجانبية للتحكم بالبيانات ---
+# العنوان الرئيسي
+st.markdown("<h1 style='text-align: center; color: #1e3a8a;'>🤖 Assistant Digital Pro</h1>", unsafe_allow_html=True)
+st.write("---")
+
+# القائمة الجانبية (Sidebar)
 with st.sidebar:
-    st.header("📝 إعدادات الكشف")
-    prov = st.text_input("Province", "AL HAOUZ")
-    commune = st.text_input("Commune", "IMGDAL")
-    date_range = st.text_input("Période", "01/01/2026 au : 31/03/2026")
-    prix_h = st.number_input("Prix Heure", value=17.92)
+    st.header("⚙️ Menu des Outils")
+    choice = st.radio("Sélectionnez l'outil :", 
+        ["📅 Calendrier Hijri", "💰 Gestion de Paie (Tableau)", "🔢 Calculatrice", "💱 Bourse Live"])
 
-    st.divider()
-    st.subheader("👤 إدارة الموظفين")
-    if 'agents' not in st.session_state:
-        # البيانات الافتراضية بناءً على الصورة
-        st.session_state.agents = [
-            {"nom": "IDBOUNITE ABDERAHIME", "cin": "G12345", "heures": 8, "jours": 66},
-            {"nom": "ABDLAZIZ OUAKRIME", "cin": "G67890", "heures": 8, "jours": 48},
-            {"nom": "MOHAMED IDBOUSABOUNE", "cin": "G11223", "heures": 8, "jours": 14}
-        ]
+# --- 1. محول التاريخ الهجري ---
+if choice == "📅 Calendrier Hijri":
+    st.header("📅 Convertisseur Hijri")
+    d = st.date_input("Date Grégorienne :", date.today())
+    hijri = Gregorian(d.year, d.month, d.day).to_hijri()
+    st.info(f"Date : {hijri.day} {hijri.month_name()} {hijri.year} AH ({hijri.day_name()})")
 
-    with st.expander("➕ إضافة موظف جديد"):
-        n_nom = st.text_input("Nom et Prénom")
-        n_cin = st.text_input("N° CIN")
-        n_h = st.number_input("H/Jour", value=8)
-        n_j = st.number_input("Nombre de Jours", value=1)
-        if st.button("إضافة إلى الجدول"):
-            st.session_state.agents.append({"nom": n_nom.upper(), "cin": n_cin.upper(), "heures": n_h, "jours": n_j})
-            st.rerun()
-
-    if st.button("🗑️ مسح الكل"):
-        st.session_state.agents = []
-        st.rerun()
-
-# --- عرض الوثيقة الرسمية ---
-
-# 1. الترويسة والعناوين
-st.markdown(f"""
-<div class="report-header">
-    MINISTERE DE L'INTERIEUR<br>
-    PROVINCE {prov}<br>
-    CERCLE ASNI<br>
-    CAIDAT OUIRGUANE<br>
-    *****<br>
-    COMMUNE {commune}
-</div>
-<div class="report-title">ÉTAT DE LA SOMME DUE</div>
-<div style="font-size: 13px; font-weight: bold; margin-bottom: 10px;">
-    1° partie, chap 10, art/prog 20/20...<br>
-    Salaires des Agent Occasionnels du Mois de : {date_range}
-</div>
-""", unsafe_allow_html=True)
-
-# 2. حساب المجموع الكلي
-total_gen = sum(a['heures'] * prix_h * a['jours'] for a in st.session_state.agents)
-
-# سطر المبلغ المطلوب دفعه
-st.markdown(f"""
-<div style="margin: 15px 0;">
-    <span style="font-weight: bold; text-decoration: underline;">somme à payer à:</span>
-    <span class="yellow-box">{total_gen:,.2f}</span>
-</div>
-""", unsafe_allow_html=True)
-
-# 3. بناء الجدول (الجزء الذي كان معطلاً في صورتك)
-table_html = """
-<table class="table-container">
-    <thead>
+# --- 2. إدارة الرواتب (الشكل المطلوب في الصورة) ---
+elif choice == "💰 Gestion de Paie (Tableau)":
+    st.header("📊 Calcul de Salaire Professionnel")
+    
+    # مدخلات البيانات
+    col1, col2, col3 = st.columns(3)
+    with col1: h_price = st.number_input("Prix Heure (سعر الساعة)", value=17.92)
+    with col2: hours = st.number_input("Heures (ساعات العمل)", value=8)
+    with col3: days = st.number_input("Nombres de jour (عدد الأيام)", value=30)
+    
+    # الحسابات
+    daily = round(hours * h_price, 2)
+    product = round(daily * days, 2)
+    
+    # بناء الجدول بنظام HTML ليطابق الصورة تماماً
+    st.markdown(f"""
+    <table class="salary-table">
         <tr>
-            <th>Nom et Prenom</th>
-            <th>N° CIN</th>
             <th>Heures</th>
             <th>Prix Heures</th>
             <th>Salaire Journalier</th>
             <th>Nombres de jour</th>
             <th>PRODUIT</th>
-            <th>emargement</th>
         </tr>
-    </thead>
-    <tbody>
-"""
-
-for a in st.session_state.agents:
-    daily = round(a['heures'] * prix_h, 2)
-    prod = round(daily * a['jours'], 2)
-    table_html += f"""
-    <tr>
-        <td>{a['nom']}</td>
-        <td>{a['cin']}</td>
-        <td>{a['heures']}</td>
-        <td>{prix_h}</td>
-        <td>{daily}</td>
-        <td>{a['jours']}</td>
-        <td>{prod}</td>
-        <td style="color: #ccc;">............</td>
-    </tr>
-    """
-
-# سطر المجموع النهائي في الجدول
-table_html += f"""
-    <tr>
-        <td colspan="6" style="text-align: center; border-right: none;">TOTAL</td>
-        <td class="yellow-box">{total_gen:,.2f}</td>
-        <td></td>
-    </tr>
-    </tbody>
-</table>
-"""
-
-# عرض الجدول مع تفعيل الـ HTML بشكل صحيح
-st.markdown(table_html, unsafe_allow_html=True)
-
-# 4. قسم التوقيعات والختم
-st.markdown(f"""
-<div style="display: flex; justify-content: space-between; margin-top: 50px; font-weight: bold;">
-    <div>L'ORDONNATEUR</div>
-    <div style="text-align: right;">
-        A {commune} Le :{date.today().strftime('%d/%m/%Y')}<br><br>
-        le Régisseur de Dépense
+        <tr>
+            <td>{hours}</td>
+            <td>{h_price}</td>
+            <td>{daily}</td>
+            <td>{days}</td>
+            <td>{product}</td>
+        </tr>
+    </table>
+    
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 20px; margin-top: -21px;">
+        <div class="total-label" style="width: 20%; border: 1px solid #000; padding: 11px; border-top: none;">TOTAL</div>
+        <div class="total-value" style="width: 20%;">{product}</div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+    
+    st.write("---")
+    st.caption("تنبيه: هذا الجدول مصمم ليطابق الشكل الذي طلبته في الصورة.")
 
-# زر الطباعة (إرشاد للمستخدم)
-st.sidebar.divider()
-st.sidebar.info("💡 للطباعة: اضغط Ctrl + P من المتصفح واختر حفظ كـ PDF.")
+# --- 3. الحاسبة ---
+elif choice == "🔢 Calculatrice":
+    st.header("🔢 Calculatrice")
+    n1 = st.number_input("Nombre 1", value=0.0)
+    n2 = st.number_input("Nombre 2", value=0.0)
+    if st.button("Calculer"): st.success(f"Résultat : {n1 + n2}")
+
+# --- 4. البورصة ---
+elif choice == "💱 Bourse Live":
+    st.header("💱 Taux de Change")
+    st.info("Données en cours de chargement من البورصة العالمية...")
+
+st.divider()
+st.caption("🤖 Assistant Digital Pro - 2024")
