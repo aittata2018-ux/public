@@ -1,64 +1,96 @@
 import streamlit as st
 import yfinance as yf
 
-# 1. إعدادات الصفحة (تظهر بشكل احترافي على الموبايل)
-st.set_page_config(page_title="الحاسبة والعملات الذكية", page_icon="💰", layout="centered")
+# 1. إعدادات الصفحة واللمسات الجمالية (CSS)
+st.set_page_config(page_title="المنصة الذكية الشاملة", page_icon="🚀", layout="centered")
 
-st.title("💰 الحاسبة الذكية وسعر الصرف")
+# إضافة لمسة جمالية للأزرار والألوان باستخدام CSS
+st.markdown("""
+    <style>
+    .stButton>button {
+        width: 100%;
+        border-radius: 10px;
+        height: 3em;
+        background-color: #225566;
+        color: white;
+    }
+    .stMetric {
+        background-color: #1e1e1e;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #333;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- قسم الحاسبة ---
-st.subheader("🔢 الحاسبة السريعة")
-n1 = st.number_input("الرقم الأول", value=0.0, key="num1")
-n2 = st.number_input("الرقم الثاني", value=0.0, key="num2")
+st.title("🚀 المنصة الذكية الشاملة")
+st.caption("حاسبة متطورة • أسعار عملات لايف • أدوات تجارية")
 
-# إنشاء 4 أعمدة متساوية تماماً للأزرار لضمان التناسق
-c1, c2, c3, c4 = st.columns(4)
-res = None
+# --- القسم الأول: الحاسبة المتطورة ---
+with st.expander("🔢 الحاسبة السريعة والنسبة المئوية", expanded=True):
+    col_n1, col_n2 = st.columns(2)
+    n1 = col_n1.number_input("الرقم الأول", value=0.0, key="main_n1")
+    n2 = col_n2.number_input("الرقم الثاني", value=0.0, key="main_n2")
 
-# استخدام رموز Emoji موحدة لجميع العمليات لضمان نفس الشكل والحجم
-if c1.button("➕", use_container_width=True, key="add"): 
-    res = n1 + n2
-if c2.button("➖", use_container_width=True, key="sub"): 
-    res = n1 - n2
-if c3.button("✖️", use_container_width=True, key="mul"): 
-    res = n1 * n2
-if c4.button("➗", use_container_width=True, key="div"): 
-    if n2 != 0:
-        res = round(n1 / n2, 2)
-    else:
-        st.error("خطأ: قسمة على 0")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    res = None
+    
+    if c1.button("➕"): res = n1 + n2
+    if c2.button("➖"): res = n1 - n2
+    if c3.button("✖️"): res = n1 * n2
+    if c4.button("➗"): res = round(n1 / n2, 2) if n2 != 0 else "خطأ"
+    if c5.button(" % "): res = round((n1 * n2) / 100, 2) # حاسبة النسبة المئوية
 
-if res is not None:
-    st.success(f"النتيجة النهائية هي: {res}")
+    if res is not None:
+        st.success(f"النتيجة النهائية: {res}")
 
 st.divider()
 
-# --- قسم محول العملات التلقائي من البورصة ---
-st.subheader("💱 أسعار العملات المباشرة")
+# --- القسم الثاني: محول العملات العالمي المباشر ---
+st.subheader("💱 محول العملات العالمي (Live)")
 
-@st.cache_data(ttl=3600) # تحديث السعر تلقائياً كل ساعة
-def get_live_rate():
+# قائمة العملات المدعومة
+currency_dict = {
+    "الدرهم المغربي (MAD)": "USDMAD=X",
+    "الجنيه المصري (EGP)": "USDEGP=X",
+    "الريال السعودي (SAR)": "USDSAR=X",
+    "الدرهم الإماراتي (AED)": "USDAED=X",
+    "اليورو (EUR)": "USDEUR=X",
+    "الجنيه الإسترليني (GBP)": "USDGBP=X"
+}
+
+selected_curr = st.selectbox("اختر العملة التي تريد التحويل إليها:", list(currency_dict.keys()))
+
+@st.cache_data(ttl=600) # تحديث كل 10 دقائق لضمان الدقة العالية
+def get_rate(symbol):
     try:
-        # USDMAD=X للدرهم، يمكنك تغييرها لـ USDEGP=X للجنيه أو USDSAR=X للريال
-        ticker = yf.Ticker("USDMAD=X") 
-        data = ticker.history(period="1d")
-        return round(data['Close'].iloc[-1], 2)
+        ticker = yf.Ticker(symbol)
+        return round(ticker.history(period="1d")['Close'].iloc[-1], 2)
     except:
-        return 10.0 # سعر احتياطي في حال انقطاع الإنترنت
+        return 1.0
 
-current_rate = get_live_rate()
+live_rate = get_rate(currency_dict[selected_curr])
 
-usd_amt = st.number_input("المبلغ بالدولار ($)", value=1.0, key="usd_val")
-local_val = round(usd_amt * current_rate, 2)
+col_usd, col_res = st.columns(2)
+usd_val = col_usd.number_input("المبلغ بالدولار ($)", value=1.0)
+converted_val = round(usd_val * live_rate, 2)
 
-# عرض السعر بشكل جذاب
-st.metric(label="المبلغ بالعملة المحلية", value=f"{local_val}", delta=f"سعر الصرف اليوم: {current_rate}")
-st.caption("ℹ️ يتم جلب الأسعار تلقائياً من الأسواق العالمية.")
+with col_res:
+    st.metric(label=f"المبلغ بـ {selected_curr.split()[-1]}", value=f"{converted_val}", delta=f"سعر الصرف: {live_rate}")
 
 st.divider()
 
-# --- قسم الإعلانات والربح ---
-st.info("📢 **مساحة إعلانية:** [أعلن هنا واجعل مشروعك يظهر للآلاف](https://wa.me)")
+# --- القسم الثالث: مساحة الإعلانات والتواصل ---
+st.subheader("📢 خدماتنا وإعلاناتنا")
+col_ad1, col_ad2 = st.columns(2)
 
-# زر دعم المطور (اختياري)
-st.markdown('[![دعم المطور](https://shields.io)](https://buymeacoffee.com)')
+with col_ad1:
+    st.info("💻 **برمج تطبيقك الخاص**\nنصمم لك تطبيقات احترافية.")
+    st.link_button("تواصل معنا واتساب", "https://wa.me")
+
+with col_ad2:
+    st.warning("📊 **إعلان تجاري**\nمساحة محجوزة لأفضل العروض اليومية.")
+
+# زر دعم المطور بشكل أنيق
+st.markdown("---")
+st.write("🙏 إذا أعجبك التطبيق لا تنسى دعمه بمشاركة الرابط!")
