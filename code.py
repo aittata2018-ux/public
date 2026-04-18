@@ -48,7 +48,50 @@ if choice == "📅 محول التاريخ الهجري":
     m_fr = m_name_raw
 
     # عرض البطاقة بالتصميم المفتوح (HTML المصحح)
+       # 1. القاموس لتعريب الشهور (ضمان عدم ظهور الإنجليزية في جهة العرب)
+    months_ar = {
+        "Muharram": "محرم", "Safar": "صفر", "Rabi' al-Awwal": "ربيع الأول",
+        "Rabi' al-Thani": "ربيع الثاني", "Jumada al-Ula": "جمادى الأولى",
+        "Jumada al-Akhira": "جمادى الآخرة", "Rajab": "رجب", "Sha'ban": "شعبان",
+        "Ramadan": "رمضان", "Shawwal": "شوال", "Dhu al-Qi'dah": "ذو القعدة",
+        "Dhu al-Hijjah": "ذو الحجة"
+    }
+    
+    m_name_raw = hijri.month_name()
+    m_ar = months_ar.get(m_name_raw, m_name_raw)
+    m_fr = m_name_raw
+
+    # 2. عرض البطاقة الاحترافية (تأكد من نسخ السطر الأخير بدقة)
     st.markdown(f"""
+    <div style="background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid rgba(79, 172, 254, 0.3); margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h2 style='color: #4facfe; margin-bottom: 30px; font-size: 2.2rem;'>التاريخ الهجري | Date Hijri</h2>
+        
+        <div style='display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap;'>
+            <div style='margin: 20px;'>
+                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>
+                    {hijri.day} {m_ar} {hijri.year} هـ
+                </p>
+                <p style='font-size: 20px; color: #4facfe;'>باللغة العربية</p>
+            </div>
+            
+            <div style='width: 2px; height: 100px; background: rgba(255,255,255,0.1);'></div>
+            
+            <div style='margin: 20px;'>
+                <p style='font-size: 42px; font-weight: bold; color: #ffffff; margin: 0;'>
+                    {hijri.day} {m_fr} {hijri.year} AH
+                </p>
+                <p style='font-size: 20px; color: #4facfe;'>En Français</p>
+            </div>
+        </div>
+        
+        <hr style='border: 0.5px solid rgba(255,255,255,0.1); width: 80%; margin: 30px auto;'>
+        
+        <p style='font-size: 22px; opacity: 0.9;'>
+            الموافق لـ : <b>{d.day}/{d.month}/{d.year}</b>
+        </p>
+    </div>
+    """, unsafe_allow_html=True) # هذا هو السطر الأهم الذي كان ينقصك!
+
     <div style="background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid rgba(79, 172, 254, 0.3); margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h2 style='color: #4facfe; margin-bottom: 30px; font-size: 2.2rem;'>التاريخ الهجري | Date Hijri</h2>
         
