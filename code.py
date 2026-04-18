@@ -5,7 +5,7 @@ from datetime import date
 # 1. إعدادات الصفحة - الواجهة الواسعة
 st.set_page_config(page_title="نظام الكشوفات الإدارية", page_icon="📝", layout="wide")
 
-# تنسيق CSS لمحاكاة الوثيقة الرسمية
+# تنسيق CSS لمحاكاة الوثيقة الرسمية الإدارية
 st.markdown("""
     <style>
     .stApp { background-color: white; color: black; }
@@ -18,7 +18,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- القائمة الجانبية للتحكم ---
+# --- القائمة الجانبية للتحكم بالبيانات ---
 with st.sidebar:
     st.header("📝 إعدادات الكشف")
     prov = st.text_input("Province", "AL HAOUZ")
@@ -27,25 +27,31 @@ with st.sidebar:
     prix_h = st.number_input("Prix Heure", value=17.92)
 
     st.divider()
-    st.subheader("👤 بيانات الموظفين")
+    st.subheader("👤 إدارة الموظفين")
     if 'agents' not in st.session_state:
+        # البيانات الافتراضية بناءً على الصورة
         st.session_state.agents = [
             {"nom": "IDBOUNITE ABDERAHIME", "cin": "G12345", "heures": 8, "jours": 66},
             {"nom": "ABDLAZIZ OUAKRIME", "cin": "G67890", "heures": 8, "jours": 48},
             {"nom": "MOHAMED IDBOUSABOUNE", "cin": "G11223", "heures": 8, "jours": 14}
         ]
 
-    with st.expander("إضافة موظف"):
-        n_nom = st.text_input("Nom")
-        n_cin = st.text_input("CIN")
-        n_h = st.number_input("H/Jour", 8)
-        n_j = st.number_input("Jours", 1)
-        if st.button("إضافة"):
-            st.session_state.agents.append({"nom": n_nom, "cin": n_cin, "heures": n_h, "jours": n_j})
+    with st.expander("➕ إضافة موظف جديد"):
+        n_nom = st.text_input("Nom et Prénom")
+        n_cin = st.text_input("N° CIN")
+        n_h = st.number_input("H/Jour", value=8)
+        n_j = st.number_input("Nombre de Jours", value=1)
+        if st.button("إضافة إلى الجدول"):
+            st.session_state.agents.append({"nom": n_nom.upper(), "cin": n_cin.upper(), "heures": n_h, "jours": n_j})
             st.rerun()
 
+    if st.button("🗑️ مسح الكل"):
+        st.session_state.agents = []
+        st.rerun()
+
 # --- عرض الوثيقة الرسمية ---
-# 1. الترويسة
+
+# 1. الترويسة والعناوين
 st.markdown(f"""
 <div class="report-header">
     MINISTERE DE L'INTERIEUR<br>
@@ -62,9 +68,10 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 2. حساب المجموع وسطر الدفع
+# 2. حساب المجموع الكلي
 total_gen = sum(a['heures'] * prix_h * a['jours'] for a in st.session_state.agents)
 
+# سطر المبلغ المطلوب دفعه
 st.markdown(f"""
 <div style="margin: 15px 0;">
     <span style="font-weight: bold; text-decoration: underline;">somme à payer à:</span>
@@ -72,19 +79,22 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 3. بناء الجدول (الجزء الذي كان يظهر ككود)
+# 3. بناء الجدول (الجزء الذي كان معطلاً في صورتك)
 table_html = """
 <table class="table-container">
-    <tr>
-        <th>Nom et Prenom</th>
-        <th>N° CIN</th>
-        <th>Heures</th>
-        <th>Prix Heures</th>
-        <th>Salaire Journalier</th>
-        <th>Nombres de jour</th>
-        <th>PRODUIT</th>
-        <th>emargement</th>
-    </tr>
+    <thead>
+        <tr>
+            <th>Nom et Prenom</th>
+            <th>N° CIN</th>
+            <th>Heures</th>
+            <th>Prix Heures</th>
+            <th>Salaire Journalier</th>
+            <th>Nombres de jour</th>
+            <th>PRODUIT</th>
+            <th>emargement</th>
+        </tr>
+    </thead>
+    <tbody>
 """
 
 for a in st.session_state.agents:
@@ -103,19 +113,21 @@ for a in st.session_state.agents:
     </tr>
     """
 
+# سطر المجموع النهائي في الجدول
 table_html += f"""
     <tr>
-        <td colspan="6" style="text-align: center;">TOTAL</td>
+        <td colspan="6" style="text-align: center; border-right: none;">TOTAL</td>
         <td class="yellow-box">{total_gen:,.2f}</td>
         <td></td>
     </tr>
+    </tbody>
 </table>
 """
 
-# عرض الجدول النهائي
+# عرض الجدول مع تفعيل الـ HTML بشكل صحيح
 st.markdown(table_html, unsafe_allow_html=True)
 
-# 4. التوقيعات
+# 4. قسم التوقيعات والختم
 st.markdown(f"""
 <div style="display: flex; justify-content: space-between; margin-top: 50px; font-weight: bold;">
     <div>L'ORDONNATEUR</div>
@@ -125,3 +137,7 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# زر الطباعة (إرشاد للمستخدم)
+st.sidebar.divider()
+st.sidebar.info("💡 للطباعة: اضغط Ctrl + P من المتصفح واختر حفظ كـ PDF.")
