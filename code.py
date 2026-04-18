@@ -1,45 +1,68 @@
 import streamlit as st
+import yfinance as yf
+
+# 1. إعدادات الصفحة (لضمان مظهر احترافي على الهواتف)
+st.set_page_config(page_title="حاسبتي الذكية والعملات", page_icon="💰", layout="centered")
 
 # عنوان التطبيق
-st.title("🧮 الحاسبة الذكية ومحول العملات")
+st.title("💰 الحاسبة الذكية وسعر الصرف المباشر")
 
-# --- قسم الحاسبة الأساسية ---
-st.subheader("🔢 الحاسبة")
-num1 = st.number_input("الرقم الأول", value=0.0, key="n1")
-num2 = st.number_input("الرقم الثاني", value=0.0, key="n2")
+# --- قسم الحاسبة ---
+st.subheader("🔢 الحاسبة السريعة")
 
-col1, col2, col3, col4 = st.columns(4)
+# مدخلات الأرقام
+n1 = st.number_input("الرقم الأول", value=0.0, key="num1")
+n2 = st.number_input("الرقم الثاني", value=0.0, key="num2")
+
+# إنشاء 4 أعمدة متساوية تماماً للأزرار لضمان التناسق البصري
+c1, c2, c3, c4 = st.columns(4)
 res = None
 
-with col1:
-    if st.button("+", key="add"): res = num1 + num2
-with col2:
-    if st.button("-", key="sub"): res = num1 - num2
-with col3:
-    if st.button("×", key="mul"): res = num1 * num2
-with col4:
-    if st.button("÷", key="div"):
-        if num2 != 0: res = round(num1 / num2, 2)
-        else: st.error("قسمة على 0!")
+# استخدام رموز Emoji موحدة لجميع العمليات لضمان نفس الحجم والشكل
+if c1.button("➕", use_container_width=True, key="add"): 
+    res = n1 + n2
+if c2.button("➖", use_container_width=True, key="sub"): 
+    res = n1 - n2
+if c3.button("✖️", use_container_width=True, key="mul"): 
+    res = n1 * n2
+if c4.button("➗", use_container_width=True, key="div"): # علامة القسمة الموحدة
+    if n2 != 0:
+        res = round(n1 / n2, 2)
+    else:
+        st.error("خطأ: قسمة على 0")
 
+# عرض النتيجة في إطار أخضر جذاب
 if res is not None:
-    st.success(f"النتيجة: {res}")
+    st.success(f"النتيجة النهائية هي: {res}")
 
-st.markdown("---")
+st.divider()
 
-# --- قسم محول العملات (مثال: من دولار إلى درهم/جنيه) ---
-st.subheader("💱 محول عملات سريع")
-usd_amount = st.number_input("أدخل المبلغ بالدولار ($)", value=1.0)
+# --- قسم محول العملات التلقائي (يجلب السعر من البورصة) ---
+st.subheader("💱 أسعار العملات العالمية")
 
-# يمكنك تعديل رقم الصرف بناءً على السعر الحالي في بلدك
-exchange_rate = 10.15  # افترضنا هنا سعر الصرف 10.15 (مثلاً للدرهم المغربي)
-local_res = round(usd_amount * exchange_rate, 2)
+@st.cache_data(ttl=3600) # تحديث السعر كل ساعة لتوفير البيانات وضمان السرعة
+def get_live_rate():
+    try:
+        # يمكنك تغيير USDMAD=X حسب عملة بلدك (مثلاً USDEGP=X للجنيه المصري)
+        ticker = yf.Ticker("USDMAD=X") 
+        data = ticker.history(period="1d")
+        return round(data['Close'].iloc[-1], 2)
+    except:
+        return 10.0 # سعر احتياطي في حال انقطاع الإنترنت
 
-st.info(f"المبلغ المساوي بالعملة المحلية: {local_res}")
-st.caption(f"سعر الصرف المستخدم: 1 دولار = {exchange_rate}")
+current_rate = get_live_rate()
 
-st.markdown("---")
-# خانة الإعلان المطورة
-st.write("📢 **إعلان:** [أعلن هنا لزيادة مبيعاتك - تواصل معنا](https://wa.me)")
+usd_amt = st.number_input("المبلغ بالدولار ($)", value=1.0, key="usd_val")
+local_val = round(usd_amt * current_rate, 2)
 
+# عرض سعر الصرف بشكل احترافي
+st.metric(label="المبلغ بالعملة المحلية", value=f"{local_val}", delta=f"سعر الصرف اليوم: {current_rate}")
+st.caption("ℹ️ يتم تحديث الأسعار تلقائياً من الأسواق العالمية.")
 
+st.divider()
+
+# --- قسم الإعلانات والربح ---
+st.info("📢 **مساحة إعلانية:** [أعلن هنا واجعل مشروعك يظهر للآلاف](https://wa.me)")
+
+# زر دعم المطور (يمكنك تغييره برابط حسابك)
+st.markdown('[![دعم المطور](https://shields.io)](https://buymeacoffee.com)')
