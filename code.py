@@ -1,35 +1,35 @@
 import streamlit as st
 import yfinance as yf
 from datetime import date
+from hijri_converter import Gregorian
 
-# 1. إعدادات الصفحة بالعنوان الجديد
-st.set_page_config(page_title="مساعدك الرقمي", page_icon="🤖", layout="centered")
+# 1. إعدادات الصفحة والتنسيق الجمالي الاحترافي
+st.set_page_config(page_title="مساعدك الرقمي الذكي", page_icon="🤖", layout="centered")
 
-# لمسات جمالية احترافية
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 8px; background-color: #225566; color: white; height: 3em; font-weight: bold; }
-    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
-    h1 { color: #4facfe; text-align: center; }
+    .stApp { background: linear-gradient(to bottom, #0f172a, #1e293b); color: white; }
+    .stButton>button { width: 100%; border-radius: 12px; background: linear-gradient(45deg, #00f2fe, #4facfe); color: white; border: none; font-weight: bold; transition: 0.3s; }
+    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4); }
+    .metric-card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
     """, unsafe_allow_html=True)
 
-# العنوان الرئيسي الجديد
-st.title("🤖 مساعدك الرقمي")
-st.write("<p style='text-align: center;'>خبيرك الذكي في الحسابات، العملات، والصحة</p>", unsafe_allow_html=True)
+st.title("🤖 مساعدك الرقمي الذكي")
+st.write("---")
 
-# القائمة الجانبية
-st.sidebar.header("🗂️ قائمة الأدوات")
-menu = ["🔢 الحاسبة والنسبة", "💱 أسعار العملات", "⚖️ الصحة والوزن", "📅 حساب العمر", "📏 محول الوحدات"]
-choice = st.sidebar.radio("اختر المهمة التي تريدها:", menu)
+# القائمة الجانبية المطورة
+with st.sidebar:
+    st.image("https://flaticon.com", width=100)
+    st.header("⚙️ لوحة التحكم")
+    choice = st.radio("اختر الأداة:", 
+        ["🔢 الحاسبة المتطورة", "💱 بورصة العملات", "📅 محول التاريخ الهجري", "📝 مفكرة المهام", "⚖️ الصحة والقياسات"])
 
-# --- 1. الحاسبة المتطورة ---
-if choice == "🔢 الحاسبة والنسبة":
+# --- 1. الحاسبة والنسبة ---
+if choice == "🔢 الحاسبة المتطورة":
     st.header("🔢 الحاسبة والنسبة المئوية")
-    col1, col2 = st.columns(2)
-    n1 = col1.number_input("الرقم الأول", value=0.0)
-    n2 = col2.number_input("الرقم الثاني", value=0.0)
-    
+    n1 = st.number_input("الرقم الأول", value=0.0)
+    n2 = st.number_input("الرقم الثاني", value=0.0)
     c1, c2, c3, c4, c5 = st.columns(5)
     res = None
     if c1.button("➕"): res = n1 + n2
@@ -37,21 +37,13 @@ if choice == "🔢 الحاسبة والنسبة":
     if c3.button("✖️"): res = n1 * n2
     if c4.button("➗"): res = round(n1/n2, 2) if n2 != 0 else "خطأ"
     if c5.button("%"): res = round((n1 * n2) / 100, 2)
-    
-    if res is not None:
-        st.success(f"النتيجة النهائية: {res}")
+    if res is not None: st.success(f"النتيجة: {res}")
 
 # --- 2. محول العملات ---
-elif choice == "💱 أسعار العملات":
-    st.header("💱 محول العملات العالمي")
-    curr_dict = {
-        "الدرهم المغربي (MAD)": "USDMAD=X", 
-        "الجنيه المصري (EGP)": "USDEGP=X", 
-        "الريال السعودي (SAR)": "USDSAR=X", 
-        "اليورو (EUR)": "USDEUR=X",
-        "الدرهم الإماراتي (AED)": "USDAED=X"
-    }
-    target = st.selectbox("حول من الدولار ($) إلى:", list(curr_dict.keys()))
+elif choice == "💱 بورصة العملات":
+    st.header("💱 أسعار العملات (مباشر)")
+    curr_dict = {"المغرب (MAD)": "USDMAD=X", "مصر (EGP)": "USDEGP=X", "السعودية (SAR)": "USDSAR=X", "أوروبا (EUR)": "USDEUR=X"}
+    target = st.selectbox("اختر العملة المستهدفة:", list(curr_dict.keys()))
     
     @st.cache_data(ttl=600)
     def get_rate(sym):
@@ -59,42 +51,49 @@ elif choice == "💱 أسعار العملات":
         except: return 10.0
 
     rate = get_rate(curr_dict[target])
-    amount = st.number_input("المبلغ بالدولار ($)", value=1.0)
-    st.metric(label=f"القيمة بـ {target}", value=f"{round(amount*rate, 2)}", delta=f"سعر الصرف: {rate}")
+    usd = st.number_input("المبلغ بالدولار ($)", value=1.0)
+    st.metric(label=f"القيمة بـ {target}", value=f"{round(usd*rate, 2)}", delta=f"سعر الصرف: {rate}")
 
-# --- 3. حاسبة الوزن المثالي ---
-elif choice == "⚖️ الصحة والوزن":
-    st.header("⚖️ حاسبة الوزن والكتلة (BMI)")
-    w = st.number_input("الوزن (كجم)", value=70.0)
-    h = st.number_input("الطول (سم)", value=170.0) / 100
-    if st.button("تحليل حالة الجسم"):
-        bmi = round(w / (h*h), 1)
-        st.info(f"مؤشر كتلة جسمك هو: {bmi}")
-        if bmi < 18.5: st.warning("الحالة: وزن ناقص")
-        elif 18.5 <= bmi < 25: st.success("الحالة: وزن مثالي ✅")
-        elif 25 <= bmi < 30: st.warning("الحالة: زيادة في الوزن")
-        else: st.error("الحالة: سمنة مفرطة")
+# --- 3. محول التاريخ ---
+elif choice == "📅 محول التاريخ الهجري":
+    st.header("📅 تحويل التاريخ (ميلادي ↔ هجري)")
+    d = st.date_input("اختر التاريخ الميلادي:", date.today())
+    hijri = Gregorian(d.year, d.month, d.day).to_hijri()
+    st.info(f"التاريخ الهجري المقابل هو: {hijri.day} {hijri.month_name()} {hijri.year} هـ")
 
-# --- 4. حاسبة العمر ---
-elif choice == "📅 حساب العمر":
-    st.header("📅 حاسبة العمر بالتفصيل")
-    dob = st.date_input("تاريخ ميلادك", date(2000, 1, 1))
-    today = date.today()
-    age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-    st.success(f"عمرك الآن هو: {age} سنة")
-    st.balloons()
+# --- 4. مفكرة المهام ---
+elif choice == "📝 مفكرة المهام":
+    st.header("📝 قائمة المهام اليومية")
+    if 'tasks' not in st.session_state: st.session_state.tasks = []
+    
+    new_task = st.text_input("أضف مهمة جديدة:")
+    if st.button("إضافة المهمة"):
+        if new_task:
+            st.session_state.tasks.append(new_task)
+            st.rerun()
+            
+    for i, task in enumerate(st.session_state.tasks):
+        col_t, col_b = st.columns([0.8, 0.2])
+        col_t.write(f"✅ {task}")
+        if col_b.button("حذف", key=f"del_{i}"):
+            st.session_state.tasks.pop(i)
+            st.rerun()
 
-# --- 5. محول القياسات ---
-elif choice == "📏 محول الوحدات":
-    st.header("📏 تحويل القياسات")
-    sub_choice = st.selectbox("نوع التحويل:", ["المسافة (كم إلى ميل)", "الحرارة (مئوي إلى فهرنهايت)", "الوزن (كجم إلى باوند)"])
-    val = st.number_input("أدخل القيمة:", value=1.0)
-    if sub_choice == "المسافة (كم إلى ميل)":
-        st.write(f"النتيجة: {round(val * 0.621, 2)} ميل")
-    elif sub_choice == "الحرارة (مئوي إلى فهرنهايت)":
-        st.write(f"النتيجة: {round((val * 9/5) + 32, 2)} فهرنهايت")
-    else:
-        st.write(f"النتيجة: {round(val * 2.204, 2)} باوند")
+# --- 5. الصحة والقياسات ---
+elif choice == "⚖️ الصحة والقياسات":
+    tab1, tab2 = st.tabs(["⚖️ مؤشر الكتلة (BMI)", "📏 محول الوحدات"])
+    with tab1:
+        w = st.number_input("الوزن (كجم)", value=70.0)
+        h = st.number_input("الطول (سم)", value=170.0) / 100
+        if st.button("تحليل"):
+            bmi = round(w/(h*h), 1)
+            st.metric("مؤشر كتلة جسمك", bmi)
+            if bmi < 18.5: st.warning("وزن ناقص")
+            elif 18.5 <= bmi < 25: st.success("وزن مثالي")
+            else: st.error("وزن زائد")
+    with tab2:
+        val = st.number_input("أدخل القيمة المراد تحويلها:")
+        st.write(f"بالميل: {round(val*0.621, 2)} | بالباوند: {round(val*2.204, 2)}")
 
-st.divider()
-st.write("📢 **مساحة إعلانية:** [تواصل مع مساعدك الرقمي للإعلان هنا](https://wa.me)")
+st.write("---")
+st.caption("📢 **إعلان:** هل تريد ميزة إضافية؟ تواصل معنا عبر واتساب.")
