@@ -7,7 +7,26 @@ from hijri_converter import Gregorian
 st.set_page_config(page_title="مساعدك الرقمي الذكي", page_icon="🤖", layout="wide")
 
 # تنسيق CSS احترافي وتوسيع الواجهة
-st.markdown("""
+    # عرض البطاقة - النسخة الفرنسية فقط (كود مصحح)
+    st.markdown(f"""
+    <div style="background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid rgba(79, 172, 254, 0.3); margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h2 style='color: #4facfe; margin-bottom: 20px; font-size: 2.2rem;'>Date Hijri</h2>
+        
+        <div style='margin: 30px 0;'>
+            <p style='font-size: 50px; font-weight: bold; color: #ffffff; margin: 0;'>
+                {hijri.day} {hijri.month_name()} {hijri.year} AH
+            </p>
+            <p style='font-size: 20px; color: #4facfe; letter-spacing: 2px;'>CALENDRIER HIJRI</p>
+        </div>
+        
+        <hr style='border: 0.5px solid rgba(255,255,255,0.1); width: 60%; margin: 30px auto;'>
+        
+        <p style='font-size: 22px; opacity: 0.9;'>
+            Correspond au : <b>{d.day}/{d.month}/{d.year}</b>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     <style>
     .block-container { padding-top: 2rem; max-width: 92%; }
     .stApp { background: linear-gradient(to bottom, #0f172a, #1e293b); color: white; }
